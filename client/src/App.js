@@ -10,7 +10,9 @@ import ProfileEditPage from './pages/ProfileEdit';
 import DriverPage from './pages/Driver';
 import AboutPage from './pages/About';
 import UserPage from './pages/UserPage';
+import EventPage from './pages/eventPage';
 import AdminPage from './pages/AdminPage';
+import EventCreatePage from './pages/eventcreatePage';
 import AdminProfilPage from './pages/AdminProfil';
 import axios from 'axios';
 
@@ -41,6 +43,9 @@ function App() {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/userpage" element={<UserPage />} />
         <Route path="/adminpage" element={<AdminPage />} />
+        <Route path="/adminprofilpage" element={<AdminProfilPage />} />
+        <Route path="/eventpage" element={<EventPage />} />
+        <Route path="/eventcreatepage" element={<EventCreatePage />} />
         {users.map((user) => (
           <Route key={user._id} path={`/profile/${user._id}`} element={<ProfilePage id={user._id} />} />
         ))}
