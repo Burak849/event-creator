@@ -1,35 +1,36 @@
 const { MongoClient } = require('mongodb');
 const express = require('express');
 const router = express.Router();
-const uri = 'mongodb+srv://nursena:nv12345.@stockmate.apmx0qk.mongodb.net/stockmate';
+
+const uri = 'mongodb+srv://burak:burak123@suber.nqzo9fx.mongodb.net/stockmate?retryWrites=true&w=majority'; // Veritabanı adını ve parametreleri düzenledim
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 async function run() {
   try {
     await client.connect();
-
-    // Do something with the connection
+    console.log('MongoDB veritabanına başarıyla bağlandı');
   } catch (err) {
     console.error(err);
-  } finally {
-    await client.close();
   }
 }
 
-run();
+run().catch(console.error);
 
-router.post('/', async (req, res) => {
+router.post('/register', async (req, res) => {
   try {
+    const newUser = req.body; // POST isteği ile gelen kullanıcı bilgilerini al
     await client.connect();
-
-    const usersCollection = client.db('stockmate').collection('users');
-    const result = await usersCollection.insertOne(req.body);
-    console.log(`Added user with ID: ${result.insertedId}`);
-
-    res.status(201).json({ message: 'User registered successfully' });
+    
+    const database = client.db('stockmate'); // Veritabanı adını düzenledim
+    const usersCollection = database.collection('user'); // Kullanıcı koleksiyonunu seç
+    
+    const result = await usersCollection.insertOne(newUser); // Yeni kullanıcıyı ekle
+    console.log(`Yeni kullanıcı eklendi with ID: ${result.insertedId}`);
+    
+    res.status(201).json({ message: 'Kullanıcı başarıyla kaydedildi' });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Error registering user' });
+    res.status(500).json({ message: 'Başarısız kayıt işlemi' });
   } finally {
     await client.close();
   }

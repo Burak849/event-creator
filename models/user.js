@@ -9,32 +9,33 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  imageURL: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  username: {
-    type: String,
-    required: true,
-    unique: true,
-  },
   email: {
     type: String,
     required: true,
     index: true,
     unique: true,
-    sparse: true,z
+    sparse: true,
   },
   password: {
+    type: String,
+    required: true,
+  },
+  confirm_password: {
     type: String,
     required: true,
   },
 });
 
 
-// 
+//BURADA HER SEYE AYRI ACMAN LAZIM ADMIN'E DE BOYLE YAPARSIN
+//UZERINE APP.USE REQUIRELERE EKLE ROTALARDA
 
-const User = mongoose.model('User', userSchema);
+
+if (mongoose.models.User) {
+  User = mongoose.model('User');
+} else {
+  User = mongoose.model('User', userSchema);
+}
+
 
 module.exports = User;

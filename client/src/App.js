@@ -22,7 +22,7 @@ function App() {
   useEffect(() => {
     const getUsers = async () => {
       try {
-        const response = await axios.get('/api/users');
+        const response = await axios.get('/api/user'); //burasi users olmasi gerkeiyor olabilir
         setUsers(response.data);
       } catch (error) {
         console.error('Error:', error);

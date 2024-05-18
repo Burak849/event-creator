@@ -1,9 +1,8 @@
-// server.js
-
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const bodyParser = require('body-parser');
+const bcrypt = require('bcryptjs');  // bcryptjs modülünü kullanabilirsiniz
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -21,70 +20,29 @@ mongoose.connect('mongodb+srv://burak:burak123.@suber.nqzo9fx.mongodb.net/', {
 
 // JSON verileri için body-parser kullanımı
 app.use(bodyParser.json());
-
-// User modeli
-const User = mongoose.model('User', {
-  name: String,
-  lastName: String,
-  imageURL: String,
-  email: String,
-  username: String,
-  password: String,
-  confirm_password: String
-});
-const Trip = mongoose.model('Trip', {
-  driver: String,
-  car_type: String,
-  amount: String,
-  departureLocation: String,
-  arrivalLocation: String,
-  date: String
-});
-const Driver = mongoose.model('Driver', {
-  name: String,
-  lastName: String,
-  car_type: String,
-  plaka: String,
-  google_token: String
-});
-
 app.use(express.json());
 
+// Rotalar
+app.use('/api/login', require('./routers/login'));
+app.use('/api/register', require('./routers/register'));
 
-// Trips
-app.get('/api/trips', async (req, res) => {
-  try {
-    const trips = await Trip.find();
-    res.json(trips);
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).send('Sunucu hatası');
-  }
-});
+// User modelini kontrol ederek tanımla
+let User;
+try {
+  User = mongoose.model('User');
+} catch (error) {
+  // Model henüz tanımlanmamışsa tanımla
+  User = mongoose.model('User', {
+    //name: String,
+    //lastName: String,
+    email: String,
+    password: String,
+    confirm_password: String
+  });
+}
 
-// Drivers
-app.get('/api/drivers', async (req, res) => {
-  try {
-    const driver = await Driver.find();
-    res.json(driver);
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).send('Sunucu hatası');
-  }
-});
-
-
-
-
-
-
-
-
-
-// 
-
-// api/users endpoint'i
-app.get('/api/users', async (req, res) => {
+// api/user endpoint'i
+app.get('/api/user', async (req, res) => {
   try {
     const users = await User.find();
     res.json(users);
@@ -94,7 +52,7 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
-app.get('/api/users/:id', async (req, res) => {
+app.get('/api/user/:id', async (req, res) => {
   const id = req.params.id;
   try {
     const user = await User.findById(id);
@@ -108,17 +66,7 @@ app.get('/api/users/:id', async (req, res) => {
   }
 });
 
-app.use(express.static(path.join(__dirname, 'client', 'build')));
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'));
-});
-
-app.listen(port, () => {
-  console.log(`Sunucu ${port} portunda çalışıyor.`);
-});
-// silme ve düzenleme
-app.delete('/api/users/:id', async (req, res) => {
+app.delete('/api/user/:id', async (req, res) => {
   const id = req.params.id;
   try {
     const user = await User.findByIdAndDelete(id);
@@ -132,7 +80,7 @@ app.delete('/api/users/:id', async (req, res) => {
   }
 });
 
-app.put('/api/users/:id', async (req, res) => {
+app.put('/api/user/:id', async (req, res) => {
   const id = req.params.id;
   const updatedUser = req.body;
   try {
@@ -152,15 +100,30 @@ app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Kullanıcının var olup olmadığını kontrol etmek için MongoDB sorgusu yapın
-    const user = await User.findOne({ email, password });
-
+    const user = await User.findOne({ email });
     if (!user) {
-      throw new Error('Geçersiz kullanıcı adı veya şifre');
+      return res.status(400).json({ error: 'Geçersiz kullanıcı adı veya şifre' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ error: 'Geçersiz kullanıcı adı veya şifre' });
     }
 
     res.json({ userId: user._id });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
   }
+});
+
+// Statik dosyalar
+app.use(express.static(path.join(__dirname, 'client', 'build')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'));
+});
+
+app.listen(port, () => {
+  console.log(`Sunucu ${port} portunda çalışıyor.`);
 });
