@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
+
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     try {
       const response = await axios.post('/api/login', { email, password });
-
-      const userId = response.data.userId;
-      window.location.href = `/profile/${userId}`;
+      const token = response.data.token;
+      localStorage.setItem('token', token); // Token saklama
+      window.location.href = `/UserPage`;
     } catch (error) {
+      setError('Giriş işlemi başarısız oldu: ' + (error.response?.data?.message || error.message));
       console.error('Giriş işlemi başarısız oldu:', error);
     }
   };
@@ -27,7 +31,8 @@ const LoginForm = () => {
                 <h1 className='text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl'>
                   Hesabınıza giriş yapınız
                 </h1>
-                <form className='space-y-4 md:space-y-6'>
+                {error && <p className='text-red-500'>{error}</p>}
+                <form className='space-y-4 md:space-y-6' onSubmit={handleSubmit}>
                   <div>
                     <label htmlFor='email' className='block mb-2 text-sm font-medium text-gray-900'>
                       Email adresiniz
@@ -38,7 +43,7 @@ const LoginForm = () => {
                       id='email'
                       className='bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5'
                       placeholder='name@company.com'
-                      required=''
+                      required
                       value={email}
                       onChange={e => setEmail(e.target.value)}
                     />
@@ -53,14 +58,13 @@ const LoginForm = () => {
                       id='password'
                       placeholder='••••••••'
                       className='bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5'
-                      required=''
+                      required
                       value={password}
                       onChange={e => setPassword(e.target.value)}
                     />
                   </div>
                   <button
-                    type='button'
-                    onClick={handleSubmit}
+                    type='submit'
                     className='w-full text-white font-medium rounded-lg text-sm px-5 py-2.5 text-center bg-sky-400 mb-5'
                   >
                     Giriş

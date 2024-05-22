@@ -2,15 +2,21 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const bodyParser = require('body-parser');
-const bcrypt = require('bcryptjs');  // bcryptjs modülünü kullanabilirsiniz
+const bcrypt = require('bcryptjs');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// MongoDB bağlantısı
-mongoose.connect('mongodb+srv://burak:burak123.@suber.nqzo9fx.mongodb.net/', {
+// MongoDB bağlantı dizesi
+const dbURI = 'mongodb+srv://burak:belian123@suber.nqzo9fx.mongodb.net/stockmate?retryWrites=true&w=majority';
+
+// Bağlantı parametreleri
+const options = {
   useNewUrlParser: true,
   useUnifiedTopology: true
-})
+};
+
+// MongoDB'ye bağlan
+mongoose.connect(dbURI, options)
   .then(() => {
     console.log('MongoDB bağlantısı başarılı.');
   })
@@ -20,32 +26,23 @@ mongoose.connect('mongodb+srv://burak:burak123.@suber.nqzo9fx.mongodb.net/', {
 
 // JSON verileri için body-parser kullanımı
 app.use(bodyParser.json());
-app.use(express.json());
+
+// User modelini tanımla
+
+const User = mongoose.model('User', {
+  email: String,
+  password: String
+});
 
 // Rotalar
 app.use('/api/login', require('./routers/login'));
 app.use('/api/register', require('./routers/register'));
 
-// User modelini kontrol ederek tanımla
-let User;
-try {
-  User = mongoose.model('User');
-} catch (error) {
-  // Model henüz tanımlanmamışsa tanımla
-  User = mongoose.model('User', {
-    //name: String,
-    //lastName: String,
-    email: String,
-    password: String,
-    confirm_password: String
-  });
-}
-
 // api/user endpoint'i
 app.get('/api/user', async (req, res) => {
   try {
-    const users = await User.find();
-    res.json(users);
+    const user = await User.find();
+    res.json(user);
   } catch (error) {
     console.error('Error:', error);
     res.status(500).send('Sunucu hatası');
@@ -96,6 +93,20 @@ app.put('/api/user/:id', async (req, res) => {
 });
 
 // POST isteğini dinleyen yol
+app.post('/api/register', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ email, password: hashedPassword });
+    await newUser.save();
+    res.json({ userId: newUser._id });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -120,10 +131,12 @@ app.post('/api/login', async (req, res) => {
 // Statik dosyalar
 app.use(express.static(path.join(__dirname, 'client', 'build')));
 
+// Tüm yolları yönlendir
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'));
 });
 
+// Sunucuyu dinlemeye başla
 app.listen(port, () => {
   console.log(`Sunucu ${port} portunda çalışıyor.`);
 });

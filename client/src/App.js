@@ -17,19 +17,19 @@ import AdminProfilPage from './pages/AdminProfil';
 import axios from 'axios';
 
 function App() {
-  const [users, setUsers] = useState([]);
+  const [user, setUser] = useState([]);
 
   useEffect(() => {
-    const getUsers = async () => {
+    const getUser = async () => {
       try {
         const response = await axios.get('/api/user'); //burasi users olmasi gerkeiyor olabilir
-        setUsers(response.data);
+        setUser(response.data);
       } catch (error) {
         console.error('Error:', error);
       }
     };
 
-    getUsers();
+    getUser();
   }, []);
 
   return (
@@ -46,8 +46,8 @@ function App() {
         <Route path="/adminprofilpage" element={<AdminProfilPage />} />
         <Route path="/eventpage" element={<EventPage />} />
         <Route path="/eventcreatepage" element={<EventCreatePage />} />
-        {users.map((user) => (
-          <Route key={user._id} path={`/profile/${user._id}`} element={<ProfilePage id={user._id} />} />
+        {user.map((user) => (
+          <Route key={user._id} path={`/userpage/${user._id}`} element={<UserPage id={user._id} />} />
         ))}
       </Routes>
     </Router>

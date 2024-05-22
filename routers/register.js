@@ -2,7 +2,7 @@ const { MongoClient } = require('mongodb');
 const express = require('express');
 const router = express.Router();
 
-const uri = 'mongodb+srv://burak:burak123@suber.nqzo9fx.mongodb.net/stockmate?retryWrites=true&w=majority'; // Veritabanı adını ve parametreleri düzenledim
+const uri = 'mongodb+srv://burak:belian123@suber.nqzo9fx.mongodb.net/stockmate?retryWrites=true&w=majority';
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 async function run() {
@@ -16,23 +16,22 @@ async function run() {
 
 run().catch(console.error);
 
+router.use(express.json()); // JSON parsing middleware ekledim
+
 router.post('/register', async (req, res) => {
   try {
-    const newUser = req.body; // POST isteği ile gelen kullanıcı bilgilerini al
-    await client.connect();
+    const newUser = req.body;
     
-    const database = client.db('stockmate'); // Veritabanı adını düzenledim
-    const usersCollection = database.collection('user'); // Kullanıcı koleksiyonunu seç
+    const database = client.db('stockmate');
+    const userCollection = database.collection('user'); // Koleksiyon adını 'user' olarak değiştirdim
     
-    const result = await usersCollection.insertOne(newUser); // Yeni kullanıcıyı ekle
+    const result = await userCollection.insertOne(newUser);
     console.log(`Yeni kullanıcı eklendi with ID: ${result.insertedId}`);
     
     res.status(201).json({ message: 'Kullanıcı başarıyla kaydedildi' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Başarısız kayıt işlemi' });
-  } finally {
-    await client.close();
   }
 });
 
